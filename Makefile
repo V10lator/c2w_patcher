@@ -9,18 +9,14 @@ endif
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPRO")
 endif
-export PATH			:=	$(DEVKITPPC)/bin:$(PORTLIBS)/bin:$(PATH)
+
+include $(DEVKITPRO)/wups/share/wups_rules
+
+WUT_ROOT := $(DEVKITPRO)/wut
+
 export LIBOGC_INC	:=	$(DEVKITPRO)/libogc/include
 export LIBOGC_LIB	:=	$(DEVKITPRO)/libogc/lib/wii
-export PORTLIBS		:=	$(DEVKITPRO)/portlibs/ppc
-
-PREFIX	:=	powerpc-eabi-
-
-export AS	:=	$(PREFIX)as
-export CC	:=	$(PREFIX)gcc
-export CXX	:=	$(PREFIX)g++
-export AR	:=	$(PREFIX)ar
-export OBJCOPY	:=	$(PREFIX)objcopy
+#export PORTLIBS		:=	$(DEVKITPRO)/portlibs/ppc
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -28,12 +24,10 @@ export OBJCOPY	:=	$(PREFIX)objcopy
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	sign_c2w_patcher
+TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 BUILD_DBG	:=	$(TARGET)_dbg
 SOURCES		:=	src \
-				src/dynamic_libs \
-				src/fs \
 				src/system \
 				src/utils
 DATA		:=
@@ -43,26 +37,24 @@ INCLUDES	:=  src payload
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-CFLAGS	:=  -std=gnu11 -mrvl -mcpu=750 -meabi -mhard-float -ffast-math \
-		    -O3 -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE)
-CXXFLAGS := -std=gnu++11 -mrvl -mcpu=750 -meabi -mhard-float -ffast-math \
-		    -O3 -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE)
-ASFLAGS	:= -mregnames
-LDFLAGS	:= -nostartfiles -Wl,-Map,$(notdir $@).map,-wrap,malloc,-wrap,free,-wrap,memalign,-wrap,calloc,-wrap,realloc,-wrap,malloc_usable_size,-wrap,_malloc_r,-wrap,_free_r,-wrap,_realloc_r,-wrap,_calloc_r,-wrap,_memalign_r,-wrap,_malloc_usable_size_r,-wrap,valloc,-wrap,_valloc_r,-wrap,_pvalloc_r,--gc-sections
+COMMON_FLAGS	:= -Ofast $(MACHDEP) -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE)
+CFLAGS	:=  -std=gnu11 $(COMMON_FLAGS)
+CXXFLAGS := -std=gnu++11 $(COMMON_FLAGS)
+ASFLAGS	:= -g $(ARCH) -mregnames
+LDFLAGS	:= -g $(ARCH) $(RPXSPECS) -nostartfiles -Wl,-Map,$(notdir $*.map) $(WUPSSPECS)
+
+LIBS	:= -lwut
 
 #---------------------------------------------------------------------------------
 Q := @
 MAKEFLAGS += --no-print-directory
-#---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project
-#---------------------------------------------------------------------------------
-LIBS	:=
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:=	$(CURDIR)	\
+			$(PORTLIBS) $(WUT_ROOT) $(WUT_ROOT)/usr \
 			$(DEVKITPPC)/lib  \
 			$(DEVKITPPC)/lib/gcc/powerpc-eabi/4.8.2
 
@@ -73,37 +65,39 @@ LIBDIRS	:=	$(CURDIR)	\
 #---------------------------------------------------------------------------------
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
-export PROJECTDIR := $(CURDIR)
-export OUTPUT	:=	$(CURDIR)/$(TARGETDIR)/$(TARGET)
+
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
+export TOPDIR	:=	$(CURDIR)
+
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
-#---------------------------------------------------------------------------------
-# automatically build a list of object files for our project
-#---------------------------------------------------------------------------------
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
+SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
-#---------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
-#---------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 ifeq ($(strip $(CPPFILES)),)
+#-------------------------------------------------------------------------------
 	export LD	:=	$(CC)
+#-------------------------------------------------------------------------------
 else
+#-------------------------------------------------------------------------------
 	export LD	:=	$(CXX)
+#-------------------------------------------------------------------------------
 endif
+#-------------------------------------------------------------------------------
 
-export OFILES	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
-					$(sFILES:.s=.o) $(SFILES:.S=.o) \
-					$(PNGFILES:.png=.png.o) $(addsuffix .o,$(BINFILES))
+export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
+export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES 	:=	$(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
 
-#---------------------------------------------------------------------------------
-# build a list of include paths
-#---------------------------------------------------------------------------------
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) -I$(LIBOGC_INC) \
@@ -113,9 +107,10 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 # build a list of library paths
 #---------------------------------------------------------------------------------
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
-					-L$(LIBOGC_LIB) -L$(PORTLIBS)/lib
+					-L$(LIBOGC_LIB)	\
+					$(foreach dir,$(PORTLIBS),-L$(dir)/lib)
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
+#export OUTPUT	:=	$(CURDIR)/$(TARGET)
 .PHONY: $(BUILD) clean install
 
 #---------------------------------------------------------------------------------
@@ -143,20 +138,27 @@ clean:
 
 #---------------------------------------------------------------------------------
 else
+.PHONY:	all
 
 DEPENDS	:=	$(OFILES:.o=.d)
+LDFLAGS += -T $(TOPDIR)/src/link.ld
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).elf:  $(OFILES)
+all	:	$(OUTPUT).rpx
+
+$(OUTPUT).rpx	:	$(OUTPUT).elf
+$(OUTPUT).elf	:	$(OFILES)
+
+$(OFILES_SRC)	: $(HFILES_BIN)
 
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .jpg extension
 #---------------------------------------------------------------------------------
 %.elf: link.ld $(OFILES)
-	@echo "linking ... $(TARGET).elf"
-	$(Q)$(LD) -n -T $^ $(LDFLAGS) -o ../$(BUILD_DBG).elf  $(LIBPATHS) $(LIBS)
+	@echo "linking ... $(TARGET).elf $(PORTLIBS)"
+	$(LD) -n -T $^ $(LDFLAGS) -o ../$(BUILD_DBG).elf  $(LIBPATHS) $(LIBS)
 	$(Q)$(OBJCOPY) -S -R .comment -R .gnu.attributes ../$(BUILD_DBG).elf $@
 
 ../data/loader.bin:

@@ -11,7 +11,7 @@ CC = arm-none-eabi-gcc
 LINK = arm-none-eabi-ld
 AS = arm-none-eabi-as
 OBJCOPY = arm-none-eabi-objcopy
-CFLAGS += -Wall -mbig-endian -std=gnu99 -march=armv5 -Os -I$(DEVKITPRO)/libnds/include
+CFLAGS += -Wall -mbig-endian -std=gnu99 -march=armv5tej -Os -I$(DEVKITPRO)/libnds/include
 LDFLAGS += --script=link.ld -EB -L"$(DEVKITARM)/arm-none-eabi/lib" -Map=output.map
 
 CFILES = $(wildcard source/*.c)
@@ -27,13 +27,6 @@ CWD = "$(CURDIR)""
 #---------------------------------------------------------------------------------
 # canned command sequence for binary data, taken from devkitARM
 #---------------------------------------------------------------------------------
-define bin2o
-	bin2s $< | $(AS) -o $(@)
-	echo "extern const u8" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > source/`(echo $(<F) | tr . _)`.h
-	echo "extern const u8" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> source/`(echo $(<F) | tr . _)`.h
-	echo "extern const u32" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> source/`(echo $(<F) | tr . _)`.h
-endef
-
 .PHONY:=all dirs
 
 all: dirs $(PROJECTNAME).bin $(PROJECTNAME)_bin.h

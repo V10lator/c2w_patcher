@@ -6,19 +6,18 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include "dynamic_libs/os_functions.h"
-#include "dynamic_libs/fs_functions.h"
-#include "dynamic_libs/gx2_functions.h"
-#include "dynamic_libs/sys_functions.h"
-#include "dynamic_libs/vpad_functions.h"
-#include "dynamic_libs/socket_functions.h"
-#include "fs/fs_utils.h"
-#include "fs/sd_fat_devoptab.h"
 #include "system/memory.h"
 #include "utils/logger.h"
 #include "utils/utils.h"
 #include "common/common.h"
 #include "main.h"
+#include <coreinit/title.h>
+#include <coreinit/ios.h>
+#include <coreinit/cache.h>
+#include <coreinit/mcp.h>
+#include <coreinit/thread.h>
+#include <sysapp/launch.h>
+#include <wut_structsize.h>
 
 #define CHAIN_START         0x1016AD40
 #define SHUTDOWN            0x1012EE4C
@@ -27,6 +26,7 @@
 #define IOS_CREATETHREAD    0x1012EABC
 #define ARM_CODE_BASE       0x08135000
 #define REPLACE_SYSCALL     0x081298BC
+
 
 int dev_uhs_0_handle;
 
@@ -302,35 +302,25 @@ int second_chain[] = {
    0x1012EA68, // 0xAC         stack pivot
 };
 
-static int patchesDone = 0;
-
-int Menu_Main(void)
+// According to https://stackoverflow.com/questions/11130109/c-struct-size-alignment the aligned attribute alignes both, start addy and size
+typedef struct WUT_PACKED __attribute__ ((aligned(0x40)))
 {
-	//!---------INIT---------
-	InitOSFunctionPointers();                  //! Init coreinit functions adresses
+	uint32_t cmd;
+	uint32_t tgt;
+	uint32_t fs;
+	uint32_t fo;
+	char path[0x100];
+} LOAD_REQUEST;
+WUT_CHECK_OFFSET(LOAD_REQUEST, 0x00, cmd);
+WUT_CHECK_OFFSET(LOAD_REQUEST, 0x04, tgt);
+WUT_CHECK_OFFSET(LOAD_REQUEST, 0x08, fs);
+WUT_CHECK_OFFSET(LOAD_REQUEST, 0x0C, fo);
+WUT_CHECK_OFFSET(LOAD_REQUEST, 0x10, path);
+WUT_CHECK_SIZE(LOAD_REQUEST, 0x140); // Would be 0x110 without the alignment
 
-
-    u64 currenTitleId = OSGetTitleID();
-    // in case we are not in mii maker but in system menu we start the installation
-    if (currenTitleId != 0x000500101004A200 && // mii maker eur
-        currenTitleId != 0x000500101004A100 && // mii maker usa
-        currenTitleId != 0x000500101004A000 && // mii maker jpn
-        currenTitleId != 0x0005000013374842)   // HBL channel
-    {
-        return EXIT_RELAUNCH_ON_LOAD;
-    }
-    else if(patchesDone)
-    {
-        return 0;
-    }
-
-	InitSysFunctionPointers();                  //! Init coreinit functions adresses
-	InitSocketFunctionPointers();                  //! Init coreinit functions adresses
-    InitFSFunctionPointers();
-    //OSForceFullRelaunch();
-    SYSLaunchMenu();
-
-    dev_uhs_0_handle = IOS_Open("/dev/uhs/0", 0);   //! Open /dev/uhs/0 IOS node
+int main()
+{
+	dev_uhs_0_handle = IOS_Open("/dev/uhs/0", 0);   //! Open /dev/uhs/0 IOS node
     uhs_exploit_init();                        //! Init variables for the exploit
 
                                                //!------ROP CHAIN-------
@@ -343,8 +333,27 @@ int Menu_Main(void)
 
     IOS_Close(dev_uhs_0_handle);
 
-    patchesDone = 1;
-    return EXIT_RELAUNCH_ON_LOAD;
+    int mcpHandle = MCP_Open();
+    if(mcpHandle > 0)
+    {
+        LOAD_REQUEST request =
+        {
+            .cmd = 0xFC,
+            .tgt = 0,
+            .fs = 0,
+            .fo = 0,
+            .path = "TODO.rpx",
+         };
+
+         IOS_Ioctl(mcpHandle, 100, &request, sizeof(LOAD_REQUEST), NULL, 0);
+         MCP_Close(mcpHandle);
+
+         _SYSLaunchTitleWithStdArgsInNoSplash(0x000500101004E000, NULL);
+    }
+    else
+       SYSLaunchMenu();
+
+    return 0;
 }
 
 //!------Variables used in exploit------

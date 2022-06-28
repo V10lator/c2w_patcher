@@ -16,7 +16,7 @@
  ****************************************************************************/
 #include <malloc.h>
 #include <string.h>
-#include "dynamic_libs/os_functions.h"
+//#include "dynamic_libs/os_functions.h"
 #include "common/common.h"
 #include "memory.h"
 
