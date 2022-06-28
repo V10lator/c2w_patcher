@@ -13,11 +13,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include "system/memory.h"
-#include "utils/logger.h"
-#include "utils/utils.h"
-#include "common/common.h"
-#include "main.h"
 #include <coreinit/title.h>
 #include <coreinit/ios.h>
 #include <coreinit/cache.h>
