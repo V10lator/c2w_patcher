@@ -43,7 +43,7 @@ CXXFLAGS := -std=gnu++11 $(COMMON_FLAGS)
 ASFLAGS	:= -g $(ARCH) -mregnames
 LDFLAGS	:= -g $(ARCH) $(RPXSPECS) -nostartfiles -Wl,-Map,$(notdir $*.map) $(WUPSSPECS)
 
-LIBS	:= -lwut
+LIBS	:= -lwut -liosuhax
 
 #---------------------------------------------------------------------------------
 Q := @
@@ -114,26 +114,14 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
 .PHONY: $(BUILD) clean install
 
 #---------------------------------------------------------------------------------
-$(BUILD): $(CURDIR)/payload/arm_kernel_bin.h
+$(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
-$(CURDIR)/payload/arm_kernel_bin.h:  $(CURDIR)/payload/arm_user_bin.h
-	@$(MAKE) --no-print-directory -C $(CURDIR)/arm_kernel -f  $(CURDIR)/arm_kernel/Makefile
-	@-mkdir -p $(CURDIR)/payload
-	@cp -p $(CURDIR)/arm_kernel/arm_kernel_bin.h $@
-	
-$(CURDIR)/payload/arm_user_bin.h:
-	@$(MAKE) --no-print-directory -C $(CURDIR)/arm_user -f  $(CURDIR)/arm_user/Makefile
-	@-mkdir -p $(CURDIR)/payload
-	@cp -p $(CURDIR)/arm_user/arm_user_bin.h $@
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).bin $(BUILD_DBG).elf $(CURDIR)/payload/arm_kernel_bin.h $(CURDIR)/payload/arm_user_bin.h
-	@$(MAKE) --no-print-directory -C $(CURDIR)/arm_user -f  $(CURDIR)/arm_user/Makefile clean
-	@$(MAKE) --no-print-directory -C $(CURDIR)/arm_kernel -f  $(CURDIR)/arm_kernel/Makefile clean
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).rpx $(BUILD_DBG).elf $(BUILD_DBG).rpx
 
 
 #---------------------------------------------------------------------------------
