@@ -1,4 +1,11 @@
-//Main.c
+#define FW_TID 0x0000000000000000
+
+/*
+ * ---------------------------------------------
+ * Don't edit anything below this
+ * ---------------------------------------------
+ */
+
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -30,31 +37,6 @@
 #define MOV_R0_0_BX_LR      0x20004770
 #define MOV_R0_0_MOV_R0_0   0x20002000
 #define STR_R6_SP_0         0x95029600
-
-// According to https://stackoverflow.com/questions/11130109/c-struct-size-alignment the aligned attribute alignes both, start addy and size
-typedef struct WUT_PACKED __attribute__ ((aligned(0x40)))
-{
-    uint32_t cmd;
-    uint32_t tgt;
-    uint32_t fs;
-    uint32_t fo;
-    char path[0x100];
-} LOAD_REQUEST;
-WUT_CHECK_OFFSET(LOAD_REQUEST, 0x00, cmd);
-WUT_CHECK_OFFSET(LOAD_REQUEST, 0x04, tgt);
-WUT_CHECK_OFFSET(LOAD_REQUEST, 0x08, fs);
-WUT_CHECK_OFFSET(LOAD_REQUEST, 0x0C, fo);
-WUT_CHECK_OFFSET(LOAD_REQUEST, 0x10, path);
-WUT_CHECK_SIZE(LOAD_REQUEST, 0x140); // Would be 0x110 without the alignment
-
-static const LOAD_REQUEST request =
-{
-    .cmd = 0xFC,
-    .tgt = 0,
-    .fs = 0,
-    .fo = 0,
-    .path = "TODO.rpx",
-};
 
 int main()
 {
@@ -104,15 +86,7 @@ int main()
         IOSUHAX_kern_write32(0x1555500, 0);
 
         IOSUHAX_Close();
-        int mcpHandle = MCP_Open();
-        if(mcpHandle > 0)
-        {
-            IOS_Ioctl(mcpHandle, 100, (void *)&request, sizeof(LOAD_REQUEST), NULL, 0);
-            MCP_Close(mcpHandle);
-            _SYSLaunchTitleWithStdArgsInNoSplash(0x000500101004E000, NULL); // TODO
-        }
-        else
-            SYSLaunchMenu();
+        _SYSLaunchTitleWithStdArgsInNoSplash(FW_TID, NULL);
     }
     else
         SYSLaunchMenu();
