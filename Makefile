@@ -39,18 +39,14 @@ INCLUDES	:=	src
 #-------------------------------------------------------------------------------
 # options for code generation
 #-------------------------------------------------------------------------------
-COMMON_FLAGS   := -Ofast $(MACHDEP) -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE)
+CFLAGS		:=	-Ofast $(MACHDEP) -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE) -D__WIIU__ -D__WUT__
 
-CFLAGS		:=	-std=gnu11 $(COMMON_FLAGS)
-
-CFLAGS		+=	$(INCLUDE) -D__WIIU__ -D__WUT__
-
-CXXFLAGS	:= -std=gnu++11 $(COMMON_FLAGS)
+CXXFLAGS	:=	$(CFLAGS)
 
 ASFLAGS		:=	-g $(ARCH) -mregnames
 LDFLAGS		:=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map)
 
-LIBS		:= -liosuhax -lwut
+LIBS		:=	-liosuhax -lwut
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level
