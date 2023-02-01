@@ -57,7 +57,7 @@ static bool isPatched(FSAClientHandle handle, FSAFileHandle file)
     return ret;
 }
 
-DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk) // Gets used!
+DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk)
 {
     if(Mocha_InitLibrary() == MOCHA_RESULT_SUCCESS)
     {
