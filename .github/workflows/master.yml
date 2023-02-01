@@ -29,7 +29,7 @@ jobs:
       - name: Build artifacts
         run: |
           docker build . -t builder
-          docker run --rm -v ${PWD}:/project builder python3 make
+          docker run --rm -v ${PWD}:/project builder make
       - name: Upload arifact
         uses: actions/upload-artifact@v3
         with:
