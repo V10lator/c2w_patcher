@@ -16,7 +16,7 @@ include $(DEVKITPRO)/wups/share/wups_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
+TARGET		:=	c2w_patcher
 BUILD		:=	build
 SOURCES		:=	src
 DATA		:=	data
