@@ -22,6 +22,7 @@ WUPS_PLUGIN_LICENSE("GPL3");
 
 #define STR_R6_SP_0 0x95029600
 #define FS_ALIGN(x) ((x + 0x3F) & ~(0x3F))
+#define C2W_PATH    "/code/c2w.img"
 
 static const uint8_t emd5sum[16] = { 0x38, 0x94, 0xe8, 0x52, 0xa2, 0x79, 0x82, 0x7e, 0xbe, 0x31, 0x93, 0x0f, 0x38, 0x55, 0x77, 0x3f };
 
@@ -56,6 +57,16 @@ static bool isPatched(FSAClientHandle handle, FSAFileHandle file)
     return ret;
 }
 
+static void patch()
+{
+    // move filename argument to new position in full path
+    Mocha_IOSUKernelWrite32(0x050089B4, STR_R6_SP_0);
+
+    // change dynamically generated title path to wii vc title path
+    Mocha_IOSUKernelWrite32(0x05008A54, 0x05062038); // /%s/code/%s
+    Mocha_IOSUKernelWrite32(0x05008A58, 0x05074A18); // wii vc path
+}
+
 DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk)
 {
     if(Mocha_InitLibrary() == MOCHA_RESULT_SUCCESS)
@@ -70,7 +81,7 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
                     char path[FS_MAX_PATH] __attribute__((__aligned__(0x40)));
                     size_t s = strlen(p);
                     OSBlockMove(path, p, s, false);
-                    OSBlockMove(path + s, "/code/c2w.img", strlen("/code/c2w.img") + 1, false);
+                    OSBlockMove(path + s, C2W_PATH, strlen(C2W_PATH) + 1, false);
 
                     FSAFileHandle file;
                     FSError e = FSAOpenFileEx(fsa, path, "r", (FSMode)0, FS_OPEN_FLAG_NONE, 0, &file);
@@ -79,14 +90,7 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
                         bool patched = isPatched(fsa, file);
                         FSACloseFile(fsa, file);
                         if(patched)
-                        {
-                            // move filename argument to new position in full path
-                            Mocha_IOSUKernelWrite32(0x050089B4, STR_R6_SP_0);
-
-                            // change dynamically generated title path to wii vc title path
-                            Mocha_IOSUKernelWrite32(0x05008A54, 0x05062038); // /%s/code/%s
-                            Mocha_IOSUKernelWrite32(0x05008A58, 0x05074A18); // wii vc path
-                        }
+                            patch();
                     }
                 }
 
