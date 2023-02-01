@@ -8,7 +8,6 @@
 
 #include <mbedtls/md5.h>
 
-#include <stdio.h>
 #include <string.h>
 
 /**
