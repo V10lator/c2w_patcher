@@ -2,6 +2,7 @@
 #include <coreinit/filesystem_fsa.h>
 #include <coreinit/mcp.h>
 #include <coreinit/memdefaultheap.h>
+#include <coreinit/memory.h>
 #include <mocha/mocha.h>
 
 #include <wups.h>
@@ -68,8 +69,9 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
                 if(Mocha_UnlockFSClientEx(fsa) == MOCHA_RESULT_SUCCESS)
                 {
                     char path[FS_MAX_PATH] __attribute__((__aligned__(0x40)));
-                    strcpy(path, p);
-                    strcat(path, "/code/c2w.img");
+                    size_t s = strlen(p);
+                    OSBlockMove(path, p, s, false);
+                    OSBlockMove(path + s, "/code/c2w.img", strlen("/code/c2w.img") + 1, false);
 
                     FSAFileHandle file;
                     FSError e = FSAOpenFileEx(fsa, path, "r", (FSMode)0, FS_OPEN_FLAG_NONE, 0, &file);
