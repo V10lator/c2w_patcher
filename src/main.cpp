@@ -24,7 +24,7 @@ WUPS_PLUGIN_LICENSE("GPL3");
 #define FS_ALIGN(x) ((x + 0x3F) & ~(0x3F))
 #define C2W_PATH    "/code/c2w.img"
 
-static const uint8_t emd5sum[16] = { 0x38, 0x94, 0xe8, 0x52, 0xa2, 0x79, 0x82, 0x7e, 0xbe, 0x31, 0x93, 0x0f, 0x38, 0x55, 0x77, 0x3f };
+static const uint32_t emd5sum[4] = { 0x3894e852, 0xa279827e, 0xbe31930f, 0x3855773f };
 
 static bool isPatched(FSAClientHandle handle, FSAFileHandle file)
 {
@@ -40,10 +40,10 @@ static bool isPatched(FSAClientHandle handle, FSAFileHandle file)
     int r = FSAReadFile(handle, buf, stat.size, 1, file, 0);
     if(r == 1)
     {
-        uint8_t md5sum[16];
-        mbedtls_md5((const unsigned char *)buf, stat.size, md5sum);
+        uint32_t md5sum[4];
+        mbedtls_md5((const unsigned char *)buf, stat.size, (unsigned char *)md5sum);
         ret = true;
-        for(int i = 0; i < 16; ++i)
+        for(int i = 0; i < 4; ++i)
         {
             if(md5sum[i] != emd5sum[i])
             {
