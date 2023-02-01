@@ -1,4 +1,3 @@
-#include <coreinit/cache.h>
 #include <coreinit/filesystem_fsa.h>
 #include <coreinit/mcp.h>
 #include <coreinit/memdefaultheap.h>
@@ -103,4 +102,3 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
     return real__SYSLaunchTitleByPathFromLauncher(p, unk);
 }
 WUPS_MUST_REPLACE(_SYSLaunchTitleByPathFromLauncher, WUPS_LOADER_LIBRARY_SYSAPP, _SYSLaunchTitleByPathFromLauncher);
-
