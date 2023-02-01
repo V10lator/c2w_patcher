@@ -6,4 +6,5 @@ ENV DEBIAN_FRONTEND=noninteractive \
  WUT_ROOT=$DEVKITPRO/wut
 WORKDIR /
 COPY --from=wiiuenv/libmocha:20220919112600f3c45c /artifacts $DEVKITPRO
+COPY --from=wiiuenv/wiiupluginsystem:2023012613440990d1e5 /artifacts $DEVKITPRO
 WORKDIR /project
