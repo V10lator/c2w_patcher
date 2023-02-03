@@ -40,8 +40,8 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
             {
                 if(Mocha_UnlockFSClientEx(fsa) == MOCHA_RESULT_SUCCESS)
                 {
-                    char path[FS_MAX_PATH] __attribute__((__aligned__(0x40)));
                     size_t s = strlen(p);
+                    char path[s + (strlen(C2W_PATH) + 1)] __attribute__((__aligned__(0x40)));
                     OSBlockMove(path, p, s, false);
                     OSBlockMove(path + s, C2W_PATH, strlen(C2W_PATH) + 1, false);
 
