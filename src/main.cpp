@@ -45,12 +45,9 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
                     OSBlockMove(path, p, s, false);
                     OSBlockMove(path + s, C2W_PATH, strlen(C2W_PATH) + 1, false);
 
-                    FSAFileHandle file;
-                    if(FSAOpenFileEx(fsa, path, "r", (FSMode)0, FS_OPEN_FLAG_NONE, 0, &file) == FS_ERROR_OK)
-                    {
-                        FSACloseFile(fsa, file);
+                    FSAStat stat;
+                    if(FSAGetStat(fsa, path, &stat) == FS_ERROR_OK)
                         patch();
-                    }
                 }
 
                 FSADelClient(fsa);
