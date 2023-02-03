@@ -12,7 +12,7 @@
 **/
 WUPS_PLUGIN_NAME("c2w patcher");
 WUPS_PLUGIN_DESCRIPTION("Unlocks the full potential of vWii");
-WUPS_PLUGIN_VERSION("v1.1");
+WUPS_PLUGIN_VERSION("v1.2");
 WUPS_PLUGIN_AUTHOR("V10lator");
 WUPS_PLUGIN_LICENSE("GPL3");
 
