@@ -16,7 +16,7 @@
 **/
 WUPS_PLUGIN_NAME("c2w patcher");
 WUPS_PLUGIN_DESCRIPTION("Unlocks the full potential of vWii");
-WUPS_PLUGIN_VERSION("v1.0");
+WUPS_PLUGIN_VERSION("v1.1");
 WUPS_PLUGIN_AUTHOR("V10lator");
 WUPS_PLUGIN_LICENSE("GPL3");
 
@@ -25,37 +25,6 @@ WUPS_PLUGIN_LICENSE("GPL3");
 #define C2W_PATH    "/code/c2w.img"
 
 static const uint32_t emd5sum[4] = { 0x3894e852, 0xa279827e, 0xbe31930f, 0x3855773f };
-
-static bool isPatched(FSAClientHandle handle, FSAFileHandle file)
-{
-    FSAStat stat;
-    if(FSAGetStatFile(handle, file, &stat) != FS_ERROR_OK)
-        return false;
-
-    void *buf = MEMAllocFromDefaultHeapEx(FS_ALIGN(stat.size), 0x40);
-    if(buf == NULL)
-        return false;
-
-    bool ret = false;
-    int r = FSAReadFile(handle, buf, stat.size, 1, file, 0);
-    if(r == 1)
-    {
-        uint32_t md5sum[4];
-        mbedtls_md5((const unsigned char *)buf, stat.size, (unsigned char *)md5sum);
-        ret = true;
-        for(int i = 0; i < 4; ++i)
-        {
-            if(md5sum[i] != emd5sum[i])
-            {
-                ret = false;
-                break;
-            }
-        }
-    }
-
-    MEMFreeToDefaultHeap(buf);
-    return ret;
-}
 
 static void patch()
 {
@@ -84,13 +53,10 @@ DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk
                     OSBlockMove(path + s, C2W_PATH, strlen(C2W_PATH) + 1, false);
 
                     FSAFileHandle file;
-                    FSError e = FSAOpenFileEx(fsa, path, "r", (FSMode)0, FS_OPEN_FLAG_NONE, 0, &file);
-                    if(e == FS_ERROR_OK)
+                    if(FSAOpenFileEx(fsa, path, "r", (FSMode)0, FS_OPEN_FLAG_NONE, 0, &file) == FS_ERROR_OK)
                     {
-                        bool patched = isPatched(fsa, file);
                         FSACloseFile(fsa, file);
-                        if(patched)
-                            patch();
+                        patch();
                     }
                 }
 
