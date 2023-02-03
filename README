@@ -1,1 +1,3 @@
-This app will apply signature patches and also redirect cafe2wii to be loaded from any wii vc title you boot up, this allows for easy cafe2wii patches without having to modify the actual system title.
+This redirects cafe2wii to be loaded from any wii vc title you boot up. It allows for easy cafe2wii patches without having to modify the actual system title.
+
+To install put the .wps file to `/wiiu/environments/aroma/plugins/` on your SD card and reboot your Wii U.
