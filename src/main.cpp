@@ -1,12 +1,8 @@
 #include <coreinit/filesystem_fsa.h>
-#include <coreinit/mcp.h>
-#include <coreinit/memdefaultheap.h>
 #include <coreinit/memory.h>
 #include <mocha/mocha.h>
 
 #include <wups.h>
-
-#include <mbedtls/md5.h>
 
 #include <string.h>
 
@@ -21,10 +17,7 @@ WUPS_PLUGIN_AUTHOR("V10lator");
 WUPS_PLUGIN_LICENSE("GPL3");
 
 #define STR_R6_SP_0 0x95029600
-#define FS_ALIGN(x) ((x + 0x3F) & ~(0x3F))
 #define C2W_PATH    "/code/c2w.img"
-
-static const uint32_t emd5sum[4] = { 0x3894e852, 0xa279827e, 0xbe31930f, 0x3855773f };
 
 static void patch()
 {
