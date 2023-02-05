@@ -33,7 +33,7 @@ CXXFLAGS	:=	$(CFLAGS)
 ASFLAGS		:=	$(ARCH)
 LDFLAGS		:=	$(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUPSSPECS)
 
-LIBS		:= -lwups -lwut -lmocha -lmbedcrypto
+LIBS		:= -lwups -lwut -lmocha
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level
