@@ -31,32 +31,35 @@ static void patch()
 
 DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk)
 {
-    if(Mocha_InitLibrary() == MOCHA_RESULT_SUCCESS)
+    size_t s = strlen(p);
+    if(s < FS_MAX_PATH - strlen(C2W_PATH))
     {
-        if(FSAInit() == FS_ERROR_OK)
+        if(Mocha_InitLibrary() == MOCHA_RESULT_SUCCESS)
         {
-            FSAClientHandle fsa = FSAAddClient(NULL);
-            if(fsa != 0)
+            if(FSAInit() == FS_ERROR_OK)
             {
-                if(Mocha_UnlockFSClientEx(fsa) == MOCHA_RESULT_SUCCESS)
+                FSAClientHandle fsa = FSAAddClient(NULL);
+                if(fsa != 0)
                 {
-                    size_t s = strlen(p);
-                    char path[s + (strlen(C2W_PATH) + 1)] __attribute__((__aligned__(0x40)));
-                    OSBlockMove(path, p, s, false);
-                    OSBlockMove(path + s, C2W_PATH, strlen(C2W_PATH) + 1, false);
+                    if(Mocha_UnlockFSClientEx(fsa) == MOCHA_RESULT_SUCCESS)
+                    {
+                        char path[s + (strlen(C2W_PATH) + 1)] __attribute__((__aligned__(0x40)));
+                        OSBlockMove(path, p, s, false);
+                        OSBlockMove(path + s, C2W_PATH, strlen(C2W_PATH) + 1, false);
 
-                    FSAStat stat;
-                    if(FSAGetStat(fsa, path, &stat) == FS_ERROR_OK)
-                        patch();
+                        FSAStat stat;
+                        if(FSAGetStat(fsa, path, &stat) == FS_ERROR_OK)
+                            patch();
+                    }
+
+                    FSADelClient(fsa);
                 }
 
-                FSADelClient(fsa);
+                FSAShutdown();
             }
 
-            FSAShutdown();
+            Mocha_DeInitLibrary();
         }
-
-        Mocha_DeInitLibrary();
     }
 
     return real__SYSLaunchTitleByPathFromLauncher(p, unk);
