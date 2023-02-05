@@ -12,7 +12,7 @@
 **/
 WUPS_PLUGIN_NAME("c2w patcher");
 WUPS_PLUGIN_DESCRIPTION("This redirects cafe2wii to be loaded from any Wii VC title you boot up");
-WUPS_PLUGIN_VERSION("v1.2");
+WUPS_PLUGIN_VERSION("v1.3");
 WUPS_PLUGIN_AUTHOR("V10lator");
 WUPS_PLUGIN_LICENSE("GPL3");
 
