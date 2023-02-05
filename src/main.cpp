@@ -18,6 +18,7 @@ WUPS_PLUGIN_LICENSE("GPL3");
 
 #define STR_R6_SP_0 0x95029600
 #define C2W_PATH    "/code/c2w.img"
+#define MLC_PATH    "/vol/storage_mlc01/"
 
 static void patch()
 {
@@ -32,7 +33,7 @@ static void patch()
 DECL_FUNCTION(int32_t, _SYSLaunchTitleByPathFromLauncher, const char *p, int unk)
 {
     size_t s = strlen(p);
-    if(s < FS_MAX_PATH - strlen(C2W_PATH))
+    if(s < FS_MAX_PATH - strlen(C2W_PATH) && strncmp(MLC_PATH, p, strlen(MLC_PATH)) == 0)
     {
         if(Mocha_InitLibrary() == MOCHA_RESULT_SUCCESS)
         {
